@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mot de passe oublié{% endblock %}
+
+{% block body %}
+    <h2>Mot de passe oublié</h2>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+
+    <form method="POST" action="{{ path('app_mdpoublie') }}">
+        <label for="identifiant">Email ou Téléphone :</label>
+        <input type="text" id="identifiant" name="identifiant" required>
+
+        <button type="submit" style="margin-top: 10px;">Envoyer le lien de réinitialisation</button>
+    </form>
+{% endblock %}

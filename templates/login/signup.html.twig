@@ -1,0 +1,40 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h1>Inscription</h1>
+
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+
+    <form method="post" action="{{ path('app_signup') }}">
+        <div>
+            <label for="nom">Nom complet:</label>
+            <input type="text" id="nom" name="nom" required>
+        </div>
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div>
+            <label for="tel">Téléphone:</label>
+            <input type="tel" id="tel" name="tel">
+        </div>
+        <div>
+            <label for="password">Mot de passe:</label>
+            <input type="password" id="mdp" name="mdp" required>
+        </div>
+        <div>
+            <label for="confirm_password">Confirmer le mot de passe:</label>
+            <input type="password" id="confirmermdp" name="confirmermdp" required>
+        </div>
+        <button type="submit">S'inscrire</button>
+    </form>
+
+    <p>Déjà un compte ? <a href="{{ path('app_signin') }}">Se connecter</a></p>
+</div>
+{% endblock %}

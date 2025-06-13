@@ -1,0 +1,20 @@
+{# templates/login/index.html.twig #}
+
+<form method="POST" action="{{ path('app_signin') }}">
+    <label for="identifiant">Email ou Téléphone :</label>
+    <input type="text" id="identifiant" name="identifiant" required>
+
+    <label for="mdp">Mot de passe :</label>
+    <input type="password" id="mdp" name="mdp" required>
+
+    <a href="{{ path('app_mdpoublie') }}" style="display:block; margin-top: 5px; font-size: 0.9em;">Mot de passe oublié ?</a>
+
+    <button type="submit" style="margin-top: 10px;">Se connecter</button>
+</form>
+
+{# Affichage des messages flash #}
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="flash-{{ label }}">{{ message }}</div>
+    {% endfor %}
+{% endfor %}

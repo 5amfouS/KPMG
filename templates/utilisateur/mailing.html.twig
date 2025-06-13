@@ -1,0 +1,48 @@
+{# templates/utilisateur/mailing.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Envoi fiches de paie{% endblock %}
+
+{% block body %}
+
+<header style="background:#f0f0f0; padding:10px; display:flex; justify-content:space-between; align-items:center;">
+    <div>
+        <strong>{{ app.session.get('user_nom') }}</strong><br>
+        <small>{{ app.session.get('user_role') }}</small>
+    </div>
+    <div>
+        <a href="{{ path('app_monespace') }}"style="padding:6px 12px; background:#007bff; color:white; text-decoration:none; border-radius:4px;">Mon espace</a>
+        <a href="{{ path('app_logout') }}" style="padding:5px 10px; background:#d9534f; color:#fff; text-decoration:none; border-radius:3px;">Déconnexion</a>
+    </div>
+</header>
+
+
+<h1>Envoyer les fiches de paie</h1>
+
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success">{{ message }}</div>
+{% endfor %}
+{% for message in app.flashes('error') %}
+    <div class="alert alert-danger">{{ message }}</div>
+{% endfor %}
+
+<form action="{{ path('app_mailing') }}" method="post" enctype="multipart/form-data">
+    <label for="entreprise_id">Choisir une entreprise :</label>
+    <select name="entreprise_id" id="entreprise_id" required>
+        <option value="" disabled selected>-- Sélectionnez --</option>
+        {% for entreprise in entreprises %}
+            <option value="{{ entreprise.id }}">{{ entreprise.nom }}</option>
+        {% endfor %}
+    </select>
+
+    <br><br>
+
+    <label for="zipfile">Fichier ZIP :</label>
+    <input type="file" name="zipfile" id="zipfile" accept=".zip" required>
+
+    <br><br>
+
+    <button type="submit">Envoyer les fiches</button>
+</form>
+{% endblock %}
+    
