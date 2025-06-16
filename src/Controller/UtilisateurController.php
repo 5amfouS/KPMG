@@ -52,6 +52,15 @@ final class UtilisateurController extends AbstractController
         return $this->redirectToRoute('app_signin');
     }
 
+    if ($session->has('user_id')) {
+        $user = $em->getRepository(Utilisateur::class)->find($session->get('user_id'));
+        if ($user && $user->getBloque() === 'oui') {
+            $session->invalidate();
+            $this->addFlash('error', 'Votre compte a été bloqué.');
+            return $this->redirectToRoute('app_signin');
+        }
+    }
+
     $user = $em->getRepository(Utilisateur::class)->find($session->get('user_id'));
 
     if ($request->isMethod('POST')) {
@@ -90,6 +99,20 @@ final class UtilisateurController extends AbstractController
             if ($hasher->verify($mdpObj->getMdp(), $nouveau)) {
                 $this->addFlash('error', 'Le nouveau mot de passe ne doit pas être identique à l’un des 5 derniers.');
                 return $this->redirectToRoute('app_monespace');
+            }
+        }
+
+        if (count($anciensMdp) >= 5) {
+            $plusAncienMdp = $em->getRepository(Mdp::class)->createQueryBuilder('m')
+                ->where('m.utilisateur = :user')
+                ->setParameter('user', $user)
+                ->orderBy('m.date_creation', 'ASC')
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+
+            if ($plusAncienMdp) {
+                $em->remove($plusAncienMdp);
             }
         }
 
@@ -132,6 +155,15 @@ final class UtilisateurController extends AbstractController
 #[Route('/mailing', name: 'app_mailing', methods:['GET','POST'])]
 public function mailing(Request $request, EntityManagerInterface $em): Response
 {
+$session = $request->getSession();
+if ($session->has('user_id')) {
+    $user = $em->getRepository(Utilisateur::class)->find($session->get('user_id'));
+    if ($user && $user->getBloque() === 'oui') {
+        $session->invalidate();
+        $this->addFlash('error', 'Votre compte a été bloqué.');
+        return $this->redirectToRoute('app_signin');
+    }
+}
 
 
     $session = $request->getSession();

@@ -34,9 +34,6 @@ class Utilisateur
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $token_e = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $token_s = null;
-
     public function getId(): ?int
     {
         return $this->id;
@@ -126,15 +123,4 @@ class Utilisateur
         return $this;
     }
 
-    public function getTokenS(): ?string
-    {
-        return $this->token_s;
-    }
-
-    public function setTokenS(?string $token_s): static
-    {
-        $this->token_s = $token_s;
-
-        return $this;
-    }
 }

@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\NativePasswordHasher;
 use App\Entity\Utilisateur;
 use App\Entity\Mdp;
+use App\Entity\Login;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use Symfony\Component\Mailer\MailerInterface;
@@ -101,9 +102,52 @@ public function mdpoublie(Request $request, EntityManagerInterface $em, MailerIn
 #[Route('/signin', name: 'app_signin', methods: ['GET', 'POST'])]
 public function login(Request $request, EntityManagerInterface $em): Response
 {
+    $session = $request->getSession();
+    $ip = $request->getClientIp(); // Récupère l'adresse IP
+
+    if ($session->has('user_id')) {
+        if($session->get('user_role') == "ADMIN")
+            return $this->redirectToRoute('app_utilisateurs');
+        else
+            return $this->redirectToRoute('app_mailing');
+    }
+
+    // 🔒 Vérification blocage IP
+    $oneHourAgo = new \DateTime('-1 hour');
+    $failedAttempts = $em->getRepository(Login::class)->createQueryBuilder('l')
+        ->select('count(l.id)')
+        ->where('l.adresse_ip = :ip')
+        ->andWhere('l.succes = :echec')
+        ->andWhere('l.date_login >= :oneHourAgo')
+        ->setParameter('ip', $ip)
+        ->setParameter('echec', 'false')
+        ->setParameter('oneHourAgo', $oneHourAgo)
+        ->getQuery()
+        ->getSingleScalarResult();
+
+
     if ($request->isMethod('POST')) {
         $identifiant = $request->request->get('identifiant'); 
         $motDePasse = $request->request->get('mdp');
+
+
+    if ($failedAttempts >= 5) {
+        // Récupère la dernière tentative échouée
+        $lastAttempt = $em->getRepository(Login::class)->createQueryBuilder('l')
+            ->where('l.adresse_ip = :ip')
+            ->andWhere('l.succes = :echec')
+            ->orderBy('l.date_login', 'DESC')
+            ->setMaxResults(1)
+            ->setParameter('ip', $ip)
+            ->setParameter('echec', 'false')
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if ( $lastAttempt->getDateLogin() > new \DateTime('-15 minutes')) {
+            $this->addFlash('error', 'Trop de tentatives échouées. Veuillez réessayer dans 15 minutes.');
+            return $this->redirectToRoute('app_signin');
+        }
+    }
 
 
         $user = $em->getRepository(Utilisateur::class)->createQueryBuilder('u')
@@ -112,69 +156,76 @@ public function login(Request $request, EntityManagerInterface $em): Response
             ->getQuery()
             ->getOneOrNullResult();
 
+        $success = 'false'; // valeur par défaut : échec
+
         if (!$user) {
             $this->addFlash('error', 'Utilisateur non trouvé.');
-            return $this->redirectToRoute('app_signin');
+        } else {
+            $mdp = $em->getRepository(Mdp::class)->createQueryBuilder('m')
+                ->where('m.utilisateur = :user')
+                ->setParameter('user', $user)
+                ->orderBy('m.date_creation', 'DESC')
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+
+            if (!$mdp) {
+                $this->addFlash('error', 'Mot de passe introuvable pour cet utilisateur.');
+            } else {
+                $hasher = new NativePasswordHasher();
+
+                if ($hasher->verify($mdp->getMdp(), $motDePasse)) {
+                    if ($user->getStatut() !== 'verifie') {
+                        $this->addFlash('error', 'Veuillez confirmer votre adresse email avant de vous connecter.');
+                    } elseif ($user->getBloque() !== 'non') {
+                        $this->addFlash('error', 'Votre compte a été suspendu, veuillez contacter un administrateur.');
+                    } else {
+                        // ✅ Connexion réussie
+                        $success = 'true';
+                        $session->set('user_id', $user->getId());
+                        $session->set('user_nom', $user->getNom());
+                        $session->set('user_role', $user->getRole());
+                        $this->addFlash('success', 'Connexion réussie !');
+
+                        // Enregistre la tentative réussie
+                        $login = new Login();
+                        $login->setAdresseIp($ip);
+                        $login->setDateLogin(new \DateTime());
+                        $login->setSucces($success);
+                        $em->persist($login);
+                        $em->flush();
+
+                        return $this->redirectToRoute(
+                            $user->getRole() === 'ADMIN' ? 'app_utilisateurs' : 'app_mailing'
+                        );
+                    }
+                } else {
+                    $this->addFlash('error', 'Mot de passe incorrect.');
+                }
+            }
         }
 
+        // Enregistre tentative échouée
+        $login = new Login();
+        $login->setAdresseIp($ip);
+        $login->setDateLogin(new \DateTime());
+        $login->setSucces($success);
+        $em->persist($login);
+        $em->flush();
 
-        $mdp = $em->getRepository(Mdp::class)->createQueryBuilder('m')
-            ->where('m.utilisateur = :user')
-            ->setParameter('user', $user)
-            ->orderBy('m.date_creation', 'DESC')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-
-        if (!$mdp) {
-            $this->addFlash('error', 'Mot de passe introuvable pour cet utilisateur.');
-            return $this->redirectToRoute('app_signin');
-        }
-
-        // Vérification du mot de passe
-        $hasher = new NativePasswordHasher();
-
-        if (!$hasher->verify($mdp->getMdp(), $motDePasse)) {
-            $this->addFlash('error', 'Mot de passe incorrect.');
-            return $this->redirectToRoute('app_signin');
-        }
-
-        if ($user->getStatut() !== 'verifie') {
-            $this->addFlash('error', 'Veuillez confirmer votre adresse email avant de vous connecter.');
-            return $this->redirectToRoute('app_signin');
-        }
-        if ($user->getBloque() !== 'non') {
-            $this->addFlash('error', 'Votre compte a été suspendu pour des raisons de sécurité, veuillez contacter un administrateur.');
-            return $this->redirectToRoute('app_signin');
-        }
-        else{
-
-
-        $this->addFlash('success', 'Connexion réussie !');
-
-
-        
-        $session = $request->getSession();
-        $session->set('user_id', $user->getId());
-        $session->set('user_nom', $user->getNom());
-        $session->set('user_role', $user->getRole());
-        if ($user->getRole() == 'ADMIN') {
-            return $this->redirectToRoute('app_utilisateurs'); 
-        }
-        else{
-            return $this->redirectToRoute('app_mailing');
-        }
-        }
-
+        return $this->redirectToRoute('app_signin');
     }
 
     return $this->render('login/signin.html.twig');
 }
 
 
+
 #[Route('/signup', name: 'app_signup', methods: ['GET', 'POST'])]
 public function signup(Request $request, EntityManagerInterface $em): Response
 {
+
+
     if ($request->isMethod('POST')) {
         $nom = $request->request->get('nom');
         $email = $request->request->get('email');
@@ -195,7 +246,6 @@ public function signup(Request $request, EntityManagerInterface $em): Response
         $user->setBloque('non');
         $user->setStatut('Non verifie');
         $user->setTokenE($tokenE);
-        $user->setTokenS(NULL);
 
         // Utilisation manuelle du hasher
         $hasher = new NativePasswordHasher();
@@ -253,8 +303,11 @@ public function signup(Request $request, EntityManagerInterface $em): Response
 }
 
     #[Route('/confirmation/{token}', name: 'app_confirmation')]
-    public function confirmation(string $token, EntityManagerInterface $em): Response
+    public function confirmation(Request $request, string $token, EntityManagerInterface $em): Response
     {
+
+
+
     // Cherche un utilisateur avec ce token
     $user = $em->getRepository(Utilisateur::class)->findOneBy(['token_e' => $token]);
 
@@ -278,6 +331,9 @@ public function signup(Request $request, EntityManagerInterface $em): Response
     #[Route('/resetmdp/{token}', name: 'app_resetmdp', methods: ['GET', 'POST'])]
 public function resetmdp(string $token, Request $request, EntityManagerInterface $em): Response
 {
+
+
+
     // 1. Vérifier que le token existe
     $user = $em->getRepository(Utilisateur::class)->findOneBy(['token_e' => $token]);
 

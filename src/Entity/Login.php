@@ -17,8 +17,9 @@ class Login
     #[ORM\Column(length: 255)]
     private ?string $adresse_ip = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTime $date_login = null;
+    
 
     #[ORM\Column(length: 255)]
     private ?string $succes = null;
