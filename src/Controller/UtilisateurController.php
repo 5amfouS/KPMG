@@ -16,8 +16,20 @@ use ZipArchive;
 use App\Entity\Employe;
 use App\Entity\Mdp;
 use Symfony\Component\PasswordHasher\Hasher\NativePasswordHasher;
+use setasign\Fpdi\Fpdi;
+use setasign\Fpdi\PdfReader;
+use TCPDF;
+use Psr\Log\LoggerInterface;
+use setasign\Fpdi\TcpdfFpdi;
+
+
+function generateRandomPassword($length = 5): string {
+    return substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz123456789'), 0, $length);
+}
 final class UtilisateurController extends AbstractController
 {
+
+
     #[Route('/utilisateurs', name: 'app_utilisateurs')]
     public function listUtilisateurs(Request $request,EntityManagerInterface $em): Response
     {
@@ -152,30 +164,27 @@ final class UtilisateurController extends AbstractController
     }
 
 
-#[Route('/mailing', name: 'app_mailing', methods:['GET','POST'])]
-public function mailing(Request $request, EntityManagerInterface $em): Response
+#[Route('/mailing', name: 'app_mailing', methods: ['GET', 'POST'])]
+public function mailing(Request $request, EntityManagerInterface $em, LoggerInterface $logger): Response
 {
-$session = $request->getSession();
-if ($session->has('user_id')) {
-    $user = $em->getRepository(Utilisateur::class)->find($session->get('user_id'));
-    if ($user && $user->getBloque() === 'oui') {
-        $session->invalidate();
-        $this->addFlash('error', 'Votre compte a été bloqué.');
-        return $this->redirectToRoute('app_signin');
-    }
-}
-
-
     $session = $request->getSession();
+
+    if ($session->has('user_id')) {
+        $user = $em->getRepository(Utilisateur::class)->find($session->get('user_id'));
+        if ($user && $user->getBloque() === 'oui') {
+            $session->invalidate();
+            $this->addFlash('error', 'Votre compte a été bloqué.');
+            return $this->redirectToRoute('app_signin');
+        }
+    }
 
     if (!$session->has('user_id')) {
         return $this->redirectToRoute('app_signin');
+    } elseif ($session->get('user_role') == "ADMIN") {
+        return $this->redirectToRoute('app_utilisateurs');
     }
-    else{
-        if($session->get('user_role')=="ADMIN")
-            return $this->redirectToRoute('app_utilisateurs');
-    }
-    $entreprises = $em->getRepository(entreprise::class)->findAll();
+
+    $entreprises = $em->getRepository(Entreprise::class)->findAll();
 
     if ($request->isMethod('POST')) {
         $entrepriseId = $request->get('entreprise_id');
@@ -186,20 +195,18 @@ if ($session->has('user_id')) {
             return $this->render('utilisateur/mailing.html.twig', ['entreprises' => $entreprises]);
         }
 
-        $entreprise = $em->getRepository(entreprise::class)->find($entrepriseId);
+        $entreprise = $em->getRepository(Entreprise::class)->find($entrepriseId);
         if (!$entreprise) {
             $this->addFlash('error', 'Entreprise introuvable.');
             return $this->render('utilisateur/mailing.html.twig', ['entreprises' => $entreprises]);
         }
 
         $nomEntreprise = $entreprise->getNom();
-
         $tempDir = sys_get_temp_dir() . '/' . uniqid('paie_', true);
         mkdir($tempDir, 0777, true);
 
-        $zipPath = $zipFile->getPathname();
         $zip = new ZipArchive();
-        if ($zip->open($zipPath) === true) {
+        if ($zip->open($zipFile->getPathname()) === true) {
             $zip->extractTo($tempDir);
             $zip->close();
         } else {
@@ -207,21 +214,53 @@ if ($session->has('user_id')) {
             return $this->render('utilisateur/mailing.html.twig', ['entreprises' => $entreprises]);
         }
 
-        // Récupérer les employés de l'entreprise
         $employes = $em->getRepository(Employe::class)->findBy(['entreprise' => $entreprise]);
-
         $errors = 0;
+
         foreach ($employes as $employe) {
             $id = $employe->getId();
             $email = $employe->getEmail();
-            $pathToPdf = $tempDir . "/paie/$nomEntreprise/$id/fiche_de_paie_modele.pdf";
-
-            if (!file_exists($pathToPdf)) {
-                $errors++;
-                continue;
-            }
+            $nom = $employe->getNom();
+            $pathToPdf = "$tempDir/paie/$nomEntreprise/$id/fiche_de_paie_modele.pdf";
+            $securedPdf = "$tempDir/secured_$id.pdf";
+            $pwd = substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 5);
 
             try {
+                if (!file_exists($pathToPdf)) {
+                    $logger->error("PDF introuvable pour employé ID $id : $pathToPdf");
+                    $errors++;
+                    continue;
+                }
+
+                // ✅ Protéger le vrai PDF avec mot de passe
+                $pdf = new TcpdfFpdi();
+
+                $pdf->SetPrintHeader(false);
+                $pdf->SetPrintFooter(false);
+                $pdf->SetProtection(['print'], $pwd);
+
+                $pdf->AddPage();
+                $pageCount = $pdf->setSourceFile($pathToPdf);
+                for ($i = 1; $i <= $pageCount; $i++) {
+                    $tplId = $pdf->importPage($i);
+                    $pdf->useTemplate($tplId);
+                    if ($i < $pageCount) {
+                        $pdf->AddPage();
+                    }
+                }
+
+                $pdf->Output($securedPdf, 'F');
+
+                if (!file_exists($securedPdf)) {
+                    throw new \Exception("Le PDF protégé n’a pas été généré !");
+                }
+
+                // ✅ Envoi WhatsApp
+                $message = "Bonjour $nom, votre fiche de paie est disponible.\n🔐 Mot de passe : $pwd";
+                $url = "https://api.callmebot.com/whatsapp.php?phone=+21694653884&text=" . urlencode($message) . "&apikey=3830934";
+                file_get_contents($url);
+
+                // ✅ Envoi Email
                 $mail = new PHPMailer(true);
                 $mail->isSMTP();
                 $mail->Host = 'smtp.gmail.com';
@@ -231,15 +270,16 @@ if ($session->has('user_id')) {
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port = 587;
 
-                $mail->setFrom('ni4loupat@gmail.com', $entreprise->getNom());
-                $mail->addAddress($email, $employe->getNom());
+                $mail->setFrom('ni4loupat@gmail.com', $nomEntreprise);
+                $mail->addAddress($email, $nom);
                 $mail->isHTML(true);
                 $mail->Subject = 'Votre fiche de paie';
                 $mail->Body = 'Bonjour, veuillez trouver en pièce jointe votre fiche de paie.';
 
-                $mail->addAttachment($pathToPdf);
+                $mail->addAttachment($securedPdf);
                 $mail->send();
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
+                $logger->error("Erreur génération ou envoi PDF pour employé $id : " . $e->getMessage());
                 $errors++;
                 continue;
             }
@@ -253,6 +293,4 @@ if ($session->has('user_id')) {
         'entreprises' => $entreprises
     ]);
 }
-
-
 }
