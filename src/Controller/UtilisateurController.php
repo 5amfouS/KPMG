@@ -21,6 +21,8 @@ use setasign\Fpdi\PdfReader;
 use TCPDF;
 use Psr\Log\LoggerInterface;
 use setasign\Fpdi\TcpdfFpdi;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+
 
 
 function generateRandomPassword($length = 5): string {
@@ -55,7 +57,7 @@ final class UtilisateurController extends AbstractController
 
 
     #[Route('/monespace', name: 'app_monespace')]
-    public function monespace(Request $request,EntityManagerInterface $em): Response
+    public function monespace(Request $request,EntityManagerInterface $em, ValidatorInterface $validator): Response
     {
 
     $session = $request->getSession();

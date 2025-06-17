@@ -14,7 +14,7 @@ use App\Entity\Login;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use Symfony\Component\Mailer\MailerInterface;
-
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class LoginController extends AbstractController
 {

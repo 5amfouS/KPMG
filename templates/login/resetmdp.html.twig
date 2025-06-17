@@ -12,7 +12,7 @@
         <div class="alert alert-success">{{ message }}</div>
     {% endfor %}
 
-    <form method="POST" action="{{ path('app_resetmdp', { token: token }) }}">
+    <form method="POST" action="{{ path('app_resetmdp', { token: token }) }}" id="resetPasswordForm" novalidate>
         <label for="new_password">Nouveau mot de passe :</label>
         <input type="password" id="new_password" name="new_password" required>
 
@@ -21,4 +21,29 @@
 
         <button type="submit">Changer le mot de passe</button>
     </form>
+
+    <script>
+    document.getElementById('resetPasswordForm').addEventListener('submit', function(event) {
+        const newPassword = document.getElementById('new_password').value.trim();
+        const confirmPassword = document.getElementById('confirm_password').value.trim();
+        const errors = [];
+
+        if (!newPassword) {
+            errors.push("Le nouveau mot de passe est obligatoire.");
+        } else if (newPassword.length < 6) {
+            errors.push("Le mot de passe doit contenir au moins 6 caractères.");
+        }
+
+        if (!confirmPassword) {
+            errors.push("La confirmation du mot de passe est obligatoire.");
+        } else if (newPassword !== confirmPassword) {
+            errors.push("Les mots de passe ne correspondent pas.");
+        }
+
+        if (errors.length > 0) {
+            event.preventDefault();
+            alert(errors.join("\n"));
+        }
+    });
+    </script>
 {% endblock %}

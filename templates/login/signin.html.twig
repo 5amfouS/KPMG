@@ -1,6 +1,6 @@
 {# templates/login/index.html.twig #}
 
-<form method="POST" action="{{ path('app_signin') }}">
+<form method="POST" action="{{ path('app_signin') }}" id="loginForm" novalidate>
     <label for="identifiant">Email ou Téléphone :</label>
     <input type="text" id="identifiant" name="identifiant" required>
 
@@ -12,9 +12,46 @@
     <button type="submit" style="margin-top: 10px;">Se connecter</button>
 </form>
 <p>Pas de compte ? <a href="{{ path('app_signup') }}">Créer un compte</a></p>
+
 {# Affichage des messages flash #}
 {% for label, messages in app.flashes %}
     {% for message in messages %}
         <div class="flash-{{ label }}">{{ message }}</div>
     {% endfor %}
 {% endfor %}
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(event) {
+    const identifiant = document.getElementById('identifiant').value.trim();
+    const mdp = document.getElementById('mdp').value.trim();
+    const errors = [];
+
+    if (!identifiant) {
+        errors.push("Le champ Email ou Téléphone est obligatoire.");
+    } else {
+        // Simple regex email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        // Simple regex téléphone
+        const telRegex = /^[+0-9\s\-]{8,15}$/;
+
+        if (identifiant.includes('@')) {
+            if (!emailRegex.test(identifiant)) {
+                errors.push("Veuillez saisir une adresse email valide.");
+            }
+        } else {
+            if (!telRegex.test(identifiant)) {
+                errors.push("Veuillez saisir un numéro de téléphone valide.");
+            }
+        }
+    }
+
+    if (!mdp) {
+        errors.push("Le mot de passe est obligatoire.");
+    }
+
+    if (errors.length > 0) {
+        event.preventDefault();
+        alert(errors.join("\n"));
+    }
+});
+</script>

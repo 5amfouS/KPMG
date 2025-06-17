@@ -1,4 +1,3 @@
-
 {% extends 'base.html.twig' %}
 
 {% block title %}Inscription{% endblock %}
@@ -11,7 +10,7 @@
         <div class="alert alert-danger">{{ message }}</div>
     {% endfor %}
 
-    <form method="post" action="{{ path('app_signup') }}">
+    <form method="post" action="{{ path('app_signup') }}" id="signupForm" novalidate>
         <div>
             <label for="nom">Nom complet:</label>
             <input type="text" id="nom" name="nom" required>
@@ -22,19 +21,62 @@
         </div>
         <div>
             <label for="tel">Téléphone:</label>
-            <input type="tel" id="tel" name="tel">
+            <input type="tel" id="tel" name="tel" placeholder="Ex: +21612345678">
         </div>
         <div>
             <label for="password">Mot de passe:</label>
-            <input type="password" id="mdp" name="mdp" required>
+            <input type="password" id="mdp" name="mdp" required minlength="6">
         </div>
         <div>
             <label for="confirm_password">Confirmer le mot de passe:</label>
-            <input type="password" id="confirmermdp" name="confirmermdp" required>
+            <input type="password" id="confirmermdp" name="confirmermdp" required minlength="6">
         </div>
         <button type="submit">S'inscrire</button>
     </form>
 
     <p>Déjà un compte ? <a href="{{ path('app_signin') }}">Se connecter</a></p>
 </div>
+
+<script>
+document.getElementById('signupForm').addEventListener('submit', function(event) {
+    const nom = document.getElementById('nom').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const tel = document.getElementById('tel').value.trim();
+    const mdp = document.getElementById('mdp').value.trim();
+    const confirmermdp = document.getElementById('confirmermdp').value.trim();
+
+    const errors = [];
+
+    if (!nom) {
+        errors.push("Le nom complet est obligatoire.");
+    }
+
+    // Simple validation email regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        errors.push("Veuillez saisir une adresse email valide.");
+    }
+
+    if (mdp.length < 6) {
+        errors.push("Le mot de passe doit contenir au moins 6 caractères.");
+    }
+
+    if (mdp !== confirmermdp) {
+        errors.push("Le mot de passe et sa confirmation ne correspondent pas.");
+    }
+
+    if (tel) {
+        // Exemple simple : doit être chiffres ou +, 8 à 15 caractères
+        const telRegex = /^[+0-9\s\-]{8,15}$/;
+        if (!telRegex.test(tel)) {
+            errors.push("Le numéro de téléphone n'est pas valide.");
+        }
+    }
+
+    if (errors.length > 0) {
+        event.preventDefault();
+        alert(errors.join("\n"));
+    }
+});
+</script>
 {% endblock %}

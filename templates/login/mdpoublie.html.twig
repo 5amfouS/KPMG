@@ -12,10 +12,30 @@
         <div class="alert alert-danger">{{ message }}</div>
     {% endfor %}
 
-    <form method="POST" action="{{ path('app_mdpoublie') }}">
+    <form method="POST" action="{{ path('app_mdpoublie') }}" id="forgotPasswordForm" novalidate>
         <label for="identifiant">Email ou Téléphone :</label>
         <input type="text" id="identifiant" name="identifiant" required>
 
         <button type="submit" style="margin-top: 10px;">Envoyer le lien de réinitialisation</button>
     </form>
+
+    <script>
+    document.getElementById('forgotPasswordForm').addEventListener('submit', function(event) {
+        const identifiant = document.getElementById('identifiant').value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const telRegex = /^[0-9]{6,15}$/; // chiffre uniquement, entre 6 et 15 chiffres
+        let error = null;
+
+        if (!identifiant) {
+            error = "Veuillez saisir un email ou un numéro de téléphone.";
+        } else if (!emailRegex.test(identifiant) && !telRegex.test(identifiant)) {
+            error = "Veuillez saisir un email valide ou un numéro de téléphone valide (6 à 15 chiffres).";
+        }
+
+        if (error) {
+            event.preventDefault();
+            alert(error);
+        }
+    });
+    </script>
 {% endblock %}
