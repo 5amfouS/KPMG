@@ -1,48 +1,47 @@
-{# templates/login/index.html.twig #}
+{% extends 'base.html.twig' %}
 
-<form method="POST" action="{{ path('app_signin') }}" id="loginForm" novalidate>
-    <label for="identifiant">Email ou Téléphone :</label>
-    <input type="text" id="identifiant" name="identifiant" required>
+{% block title %}🔐 Connexion{% endblock %}
 
-    <label for="mdp">Mot de passe :</label>
-    <input type="password" id="mdp" name="mdp" required>
+{% block body_class %}before-login{% endblock %}
 
-    <a href="{{ path('app_mdpoublie') }}" style="display:block; margin-top: 5px; font-size: 0.9em;">Mot de passe oublié ?</a>
-    
-    <button type="submit" style="margin-top: 10px;">Se connecter</button>
-</form>
-<p>Pas de compte ? <a href="{{ path('app_signup') }}">Créer un compte</a></p>
+{% block body %}
+<main>
+    <h2>🔐 Connexion</h2>
 
-{# Affichage des messages flash #}
-{% for label, messages in app.flashes %}
-    {% for message in messages %}
-        <div class="flash-{{ label }}">{{ message }}</div>
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }}">
+                {% if label == 'success' %}✅{% elseif label == 'error' %}❌{% endif %}
+                {{ message }}
+            </div>
+        {% endfor %}
     {% endfor %}
-{% endfor %}
+
+    <form method="POST" action="{{ path('app_signin') }}" id="loginForm" novalidate>
+        <label for="email">📧 Email :</label>
+        <input type="email" id="email" name="identifiant" placeholder="Votre email" required>
+
+        <label for="mdp">🔑 Mot de passe :</label>
+        <input type="password" id="mdp" name="mdp" placeholder="Votre mot de passe" required>
+
+        <button type="submit">Se connecter</button><br>
+        <a href="{{ path('app_mdpoublie') }}" class="link-small">Mot de passe oublié ?</a>
+    </form>
+
+    <p>Pas de compte ? <a href="{{ path('app_signup') }}">Créer un compte</a></p>
+</main>
 
 <script>
 document.getElementById('loginForm').addEventListener('submit', function(event) {
-    const identifiant = document.getElementById('identifiant').value.trim();
+    const email = document.getElementById('email').value.trim();
     const mdp = document.getElementById('mdp').value.trim();
     const errors = [];
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!identifiant) {
-        errors.push("Le champ Email ou Téléphone est obligatoire.");
-    } else {
-        // Simple regex email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        // Simple regex téléphone
-        const telRegex = /^[+0-9\s\-]{8,15}$/;
-
-        if (identifiant.includes('@')) {
-            if (!emailRegex.test(identifiant)) {
-                errors.push("Veuillez saisir une adresse email valide.");
-            }
-        } else {
-            if (!telRegex.test(identifiant)) {
-                errors.push("Veuillez saisir un numéro de téléphone valide.");
-            }
-        }
+    if (!email) {
+        errors.push("Le champ Email est obligatoire.");
+    } else if (!emailRegex.test(email)) {
+        errors.push("Veuillez saisir une adresse email valide.");
     }
 
     if (!mdp) {
@@ -55,3 +54,4 @@ document.getElementById('loginForm').addEventListener('submit', function(event) 
     }
 });
 </script>
+{% endblock %}

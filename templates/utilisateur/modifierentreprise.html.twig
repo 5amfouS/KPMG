@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}✏️ Modifier l'entreprise{% endblock %}
+{% block body_class %}after-login{% endblock %}
+
+{% block body %}
+<header>
+  <div class="user-info">
+    <strong>{{ app.session.get('user_nom') }}</strong><br>
+    <small>{{ app.session.get('user_role') }}</small>
+  </div>
+  <nav class="nav-links">
+    <a href="{{ path('app_entreprises') }}" class="btn blue">🏢 Liste des entreprises</a>
+    <a href="{{ path('app_mailing') }}" class="btn blue">📧 Mailing</a>
+    <a href="{{ path('app_monespace') }}" class="btn blue">👤 Mon espace</a>
+    <a href="{{ path('app_logout') }}" class="btn red">🚪 Déconnexion</a>
+  </nav>
+</header>
+
+<h1>✏️ Modifier l'entreprise #{{ entreprise.id }}</h1>
+
+{% if error %}
+  <div class="alert alert-danger">❌ {{ error }}</div>
+{% endif %}
+{% if success %}
+  <div class="alert alert-success">✅ {{ success }}</div>
+{% endif %}
+
+<form method="post" style="max-width: 500px;" novalidate>
+  <label for="nom">🏢 Nom de l'entreprise :</label>
+  <input type="text" id="nom" name="nom" value="{{ entreprise.nom }}" required placeholder="Nom de l'entreprise">
+
+  <label for="contact">📧 Email de contact :</label>
+  <input type="email" id="contact" name="contact" value="{{ entreprise.contact }}" required placeholder="exemple@domaine.com">
+
+  <button type="submit" class="btn green">💾 Enregistrer</button>
+</form>
+
+<br>
+
+<a href="{{ path('app_entreprises') }}" >← Retour à la liste des entreprises</a>
+{% endblock %}

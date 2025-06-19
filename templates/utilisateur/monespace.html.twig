@@ -1,71 +1,74 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Changer mot de passe{% endblock %}
+{% block title %}🔒 Changer mot de passe{% endblock %}
+{% block body_class %}after-login{% endblock %}
 
 {% block body %}
-<header style="background:#f0f0f0; padding:10px; display:flex; justify-content:space-between; align-items:center;">
-    <div>
-        <strong>{{ app.session.get('user_nom') }}</strong><br>
-        <small>{{ app.session.get('user_role') }}</small>
-    </div>
-    <div>
-        <a href="{{ path('app_mailing') }}" style="padding:6px 12px; background:#007bff; color:white; text-decoration:none; border-radius:4px;">Mailing</a>
-        <a href="{{ path('app_logout') }}" style="padding:5px 10px; background:#d9534f; color:#fff; text-decoration:none; border-radius:3px;">Déconnexion</a>
-    </div>
+<header>
+  <div class="user-info">
+    <strong>{{ app.session.get('user_nom') }}</strong><br>
+    <small>{{ app.session.get('user_role') }}</small>
+  </div>
+    <nav class="nav-links">
+        {% if app.session.get('user_role') == 'USER' %}
+            <a href="{{ path('app_entreprises') }}" class="btn blue">🏢 Liste des entreprises</a>
+            <a href="{{ path('app_mailing') }}" class="btn blue">📧 Mailing</a>
+            <a href="{{ path('app_monespace') }}" class="btn blue">👤 Mon espace</a>
+        {% endif %}
+        {% if app.session.get('user_role') == 'ADMIN' %}
+            <a href="{{ path('app_utilisateurs') }}" class="btn blue">👥 Utilisateurs</a>
+        {% endif %}
+
+        <a href="{{ path('app_logout') }}" class="btn red">🚪 Déconnexion</a>
+    </nav>
+
 </header>
 
-<h2>Changer mon mot de passe</h2>
+<h2>🔒 Changer mon mot de passe</h2>
 
 {% for message in app.flashes('success') %}
-    <div class="alert alert-success">{{ message }}</div>
+  <div class="alert alert-success">✅ {{ message }}</div>
 {% endfor %}
 {% for message in app.flashes('error') %}
-    <div class="alert alert-danger">{{ message }}</div>
+  <div class="alert alert-danger">❌ {{ message }}</div>
 {% endfor %}
 
-<form method="post" action="{{ path('app_monespace') }}" id="changePasswordForm" novalidate>
-    <label for="ancien">Ancien mot de passe :</label>
-    <input type="password" name="ancien" id="ancien" required>
+<form method="post" action="{{ path('app_monespace') }}" id="changePasswordForm" novalidate style="max-width: 500px;">
+  <label for="ancien">🔑 Ancien mot de passe :</label>
+  <input type="password" name="ancien" id="ancien" required placeholder="Entrez l'ancien mot de passe">
 
-    <br><br>
+  <label for="nouveau">🆕 Nouveau mot de passe :</label>
+  <input type="password" name="nouveau" id="nouveau" required minlength="6" placeholder="Nouveau mot de passe">
 
-    <label for="nouveau">Nouveau mot de passe :</label>
-    <input type="password" name="nouveau" id="nouveau" required minlength="6">
+  <label for="confirmer">🧪 Confirmer le nouveau mot de passe :</label>
+  <input type="password" name="confirmer" id="confirmer" required minlength="6" placeholder="Confirmer le mot de passe">
 
-    <br><br>
-
-    <label for="confirmer">Confirmer le nouveau mot de passe :</label>
-    <input type="password" name="confirmer" id="confirmer" required minlength="6">
-
-    <br><br>
-
-    <button type="submit">Changer le mot de passe</button>
+  <button type="submit" class="btn green">💾 Changer le mot de passe</button>
 </form>
 
 <script>
 document.getElementById('changePasswordForm').addEventListener('submit', function(event) {
-    const ancien = document.getElementById('ancien').value.trim();
-    const nouveau = document.getElementById('nouveau').value.trim();
-    const confirmer = document.getElementById('confirmer').value.trim();
-    let errors = [];
+  const ancien = document.getElementById('ancien').value.trim();
+  const nouveau = document.getElementById('nouveau').value.trim();
+  const confirmer = document.getElementById('confirmer').value.trim();
+  let errors = [];
 
-    if (!ancien) {
-        errors.push("Veuillez saisir votre ancien mot de passe.");
-    }
+  if (!ancien) {
+    errors.push("Veuillez saisir votre ancien mot de passe.");
+  }
 
-    if (nouveau.length < 6) {
-        errors.push("Le nouveau mot de passe doit contenir au moins 6 caractères.");
-    }
+  if (nouveau.length < 6) {
+    errors.push("Le nouveau mot de passe doit contenir au moins 6 caractères.");
+  }
 
-    if (nouveau !== confirmer) {
-        errors.push("Le nouveau mot de passe et sa confirmation ne correspondent pas.");
-    }
+  if (nouveau !== confirmer) {
+    errors.push("Le nouveau mot de passe et sa confirmation ne correspondent pas.");
+  }
 
-    if (errors.length > 0) {
-        event.preventDefault(); // stop form submission
-        alert(errors.join("\n"));
-    }
+  if (errors.length > 0) {
+    event.preventDefault();
+    alert(errors.join("\n"));
+  }
 });
 </script>
-
 {% endblock %}

@@ -1,85 +1,66 @@
-{# templates/utilisateurs/list.html.twig #}
-
 {% extends 'base.html.twig' %}
 
-{% block title %}Liste des utilisateurs{% endblock %}
-
-{% block stylesheets %}
-    {{ parent() }}
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        th, td {
-            border: 1px solid #333;
-            padding: 8px;
-        }
-        th {
-            background-color: #eee;
-        }
-    </style>
-{% endblock %}
+{% block title %}👥 Liste des utilisateurs{% endblock %}
+{% block body_class %}after-login{% endblock %}
 
 {% block body %}
+  <header>
+    <div class="user-info">
+      <strong>{{ app.session.get('user_nom') }}</strong><br>
+      <small>{{ app.session.get('user_role') }}</small>
+    </div>
+    <nav class="nav-links">
+      <a href="{{ path('app_monespace') }}" class="btn blue">👤 Mon espace</a>
+      <a href="{{ path('app_logout') }}" class="btn red">🚪 Déconnexion</a>
+    </nav>
+  </header>
 
+  <h1>👥 Liste des utilisateurs</h1>
 
-    <header style="background:#f0f0f0; padding:10px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-            <strong>{{ app.session.get('user_nom') }}</strong><br>
-            <small>{{ app.session.get('user_role') }}</small>
-        </div>
-        <div>
-            <a href="{{ path('app_monespace') }}"style="padding:6px 12px; background:#007bff; color:white; text-decoration:none; border-radius:4px;">Mon espace</a>
-            <a href="{{ path('app_logout') }}" style="padding:5px 10px; background:#d9534f; color:#fff; text-decoration:none; border-radius:3px;">Déconnexion</a>
-        </div>
-    </header>
-
-
-
-    <h1>Liste des utilisateurs</h1>
-
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nom</th>
-                <th>Email</th>
-                <th>Téléphone</th>
-                <th>Rôle</th>
-                <th>Statut</th>
-                <th>Est bloque</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in utilisateurs %}
-                <tr>
-                    <td>{{ user.id }}</td>
-                    <td>{{ user.nom }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ user.tel }}</td>
-                    <td>{{ user.role }}</td>
-                    <td>{{ user.statut }}</td>
-                    <td>{{ user.bloque }}</td>
-                    <td>
-                    {% if user.bloque == 'non' %}
-                        <form method="post" action="{{ path('toggle_user_block', {'id': user.id}) }}" onsubmit="return confirm('Bloquer cet utilisateur ?');">
-                        <button type="submit">Bloquer</button>
-                        </form>
-                    {% else %}
-                        <form method="post" action="{{ path('toggle_user_block', {'id': user.id}) }}" onsubmit="return confirm('Débloquer cet utilisateur ?');">
-                        <button type="submit">Débloquer</button>
-                        </form>
-                    {% endif %}
-                    </td>
-
-                </tr>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nom</th>
+        <th>Email</th>
+        <th>Téléphone</th>
+        <th>Rôle</th>
+        <th>Statut</th>
+        <th>Bloqué</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in utilisateurs %}
+        <tr>
+          <td>{{ user.id }}</td>
+          <td>{{ user.nom }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.tel }}</td>
+          <td>{{ user.role }}</td>
+          <td>{{ user.statut }}</td>
+          <td>
+            {% if user.bloque == 'oui' %}
+              <span style="color: red; font-weight: bold;">Oui</span>
             {% else %}
-                <tr>
-                    <td colspan="6">Aucun utilisateur trouvé.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+              <span style="color: green; font-weight: bold;">Non</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="post" action="{{ path('toggle_user_block', {'id': user.id}) }}"
+                  onsubmit="return confirm('{{ user.bloque == 'non' ? 'Bloquer' : 'Débloquer' }} cet utilisateur ?');">
+              <button type="submit"
+                      class="table-button {{ user.bloque == 'non' ? 'delete' : 'manage' }}">
+                {{ user.bloque == 'non' ? '🚫 Bloquer' : '✅ Débloquer' }}
+              </button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="8" class="text-center">Aucun utilisateur trouvé.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 {% endblock %}

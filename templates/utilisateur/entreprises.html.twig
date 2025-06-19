@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des entreprises{% endblock %}
+{% block body_class %}after-login{% endblock %}
+{% block body %}
+<div>
+  <header>
+    <div class="user-info">
+      <strong>{{ app.session.get('user_nom') }}</strong><br>
+      <small>{{ app.session.get('user_role') }}</small>
+    </div>
+    <nav class="nav-links">
+      <a href="{{ path('app_ajouterentreprise') }}" class="btn blue">🏢 Ajouter une entreprise</a>
+      <a href="{{ path('app_mailing') }}" class="btn blue">📧 Mailing</a>
+      <a href="{{ path('app_monespace') }}" class="btn blue">👤 Mon espace</a>
+      <a href="{{ path('app_logout') }}" class="btn red">🚪 Déconnexion</a>
+    </nav>
+  </header>
+
+  <h1>Liste des entreprises</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nom</th>
+        <th>Contact</th>
+        <th>Fichier</th>
+        <th>Gestion des employés</th>
+        <th>Modifier</th>
+        <th>Supprimer</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entreprise in entreprises %}
+        {% set nbEmployes = employeCounts[entreprise.id]|default(0) %}
+        {% set fichierManquant = entreprise.fichier is empty %}
+        {% set rowClass = '' %}
+        {% if fichierManquant and nbEmployes == 0 %}
+          {% set rowClass = 'row-danger' %}
+        {% elseif fichierManquant %}
+          {% set rowClass = 'row-warning' %}
+        {% endif %}
+
+        <tr class="{{ rowClass }}">
+          <td>{{ entreprise.id }}</td>
+          <td>{{ entreprise.nom }}</td>
+          <td>{{ entreprise.contact }}</td>
+          <td>{{ entreprise.fichier ?: '—' }}</td>
+          <td>
+            <a href="{{ path('app_employes_entreprise', { id: entreprise.id }) }}" class="table-button manage" title="Gérer les employés">Gérer</a>
+          </td>
+          <td>
+            <a href="{{ path('app_modifierentreprise', { id: entreprise.id }) }}" class="table-button edit" title="Modifier l'entreprise">Modifier</a>
+          </td>
+          <td>
+            <form method="post" action="{{ path('app_supprimer_entreprise', { id: entreprise.id }) }}"
+                  onsubmit="return confirm('Confirmer la suppression ?');" style="display:inline;">
+              <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ entreprise.id) }}">
+              <button type="submit" class="table-button delete" title="Supprimer l'entreprise">Supprimer</button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7" class="text-center">Aucune entreprise trouvée.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

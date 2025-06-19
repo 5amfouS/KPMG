@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Entity;
-
+use App\Entity\Entreprise;
 use App\Repository\EmployeRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -9,7 +9,6 @@ use Doctrine\ORM\Mapping as ORM;
 class Employe
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
@@ -26,6 +25,12 @@ class Employe
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function setId(int $id): self
+    {
+        $this->id = $id;
+        return $this;
     }
 
     public function getEntreprise(): ?entreprise

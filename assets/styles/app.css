@@ -1,3 +1,301 @@
+/* Styles communs à tout le site */
 body {
-    background-color: skyblue;
+    background: #f7f9fc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* ----- AVANT CONNEXION (centré avec largeur limitée) ----- */
+body.before-login main,
+body.before-login .container {
+    max-width: 480px;
+    margin: 50px auto;
+    background: #fff;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* ----- APRES CONNEXION (plein écran, sans limite de largeur) ----- */
+body.after-login main,
+body.after-login .container {
+    max-width: 100%; /* ou tu peux carrément ne pas mettre de max-width */
+    margin: 0;
+    padding: 20px 40px;
+    background: #fff;
+    border-radius: 0;
+    box-shadow: none;
+    min-height: 100vh;
+}
+
+/* Header commun */
+header {
+    background: #f0f0f0;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #555;
+    border-radius: 0 0 8px 8px;
+    box-shadow: inset 0 -1px 0 #ccc;
+}
+
+header div strong {
+    font-weight: 600;
+}
+
+header div small {
+    color: #777;
+}
+
+/* Liens dans header */
+header a {
+    padding: 6px 12px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-left: 8px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+header a:hover {
+    background: #0056b3;
+}
+
+.btn.red {
+  background-color: #d9534f;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.btn.red:hover {
+  background-color: #b52a2a;
+}
+
+
+/* Formulaires */
+form label {
+    font-weight: 600;
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 6px;
+}
+
+form input[type="text"],
+form input[type="email"],
+form input[type="password"],
+form input[type="file"],
+form select,
+form textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+form button {
+    margin-top: 18px;
+    background: #28a745;
+    color: white;
+    font-weight: 700;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+form button:hover {
+    background: #218838;
+}
+
+/* Secondaires */
+button.secondary, 
+a.btn-secondary {
+    background: #6c757d !important;
+}
+
+button.secondary:hover,
+a.btn-secondary:hover {
+    background: #5a6268 !important;
+}
+
+/* Alertes */
+.alert {
+    padding: 12px 15px;
+    margin: 15px 0;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error, .alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Flash messages */
+.flash-success::before {
+    content: "✅ ";
+}
+
+.flash-error::before,
+.flash-danger::before {
+    content: "❌ ";
+}
+
+/* Tableaux */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.95rem;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 10px 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f1f3f5;
+    font-weight: 700;
+}
+
+tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+/* Couleurs rangées spéciales */
+.row-warning {
+    background-color: #fff3cd !important; /* orange-ish */
+}
+
+.row-danger {
+    background-color: #f8d7da !important; /* red-ish */
+}
+
+/* Boutons tableau */
+.table-button {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+    margin: 2px 0;
+    transition: background-color 0.3s ease;
+}
+
+.table-button.manage {
+    background-color: #17a2b8;
+}
+
+.table-button.manage:hover {
+    background-color: #117a8b;
+}
+
+.table-button.edit {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.table-button.edit:hover {
+    background-color: #d39e00;
+}
+
+.table-button.delete {
+    background-color: #dc3545;
+}
+
+.table-button.delete:hover {
+    background-color: #bd2130;
+}
+
+/* Alignements */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/* Emoji helper classes */
+.emoji-success::before {
+    content: "✅ ";
+}
+
+.emoji-error::before {
+    content: "❌ ";
+}
+
+.emoji-info::before {
+    content: "ℹ️ ";
+}
+
+.emoji-warning::before {
+    content: "⚠️ ";
+}
+
+/* Hover sur les lignes du tableau */
+table tbody tr:hover {
+    background-color: #e9f5ff;
+}
+
+/* Curseur pointer sur les boutons */
+.table-button {
+    cursor: pointer;
+}
+
+/* Titres de colonnes alignés au centre (optionnel) */
+th {
+    text-align: center;
+}
+
+/* Centrer les boutons dans les colonnes */
+td > a.table-button,
+td > form > button.table-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+/* Espace entre boutons et texte */
+.table-button.manage::before {
+    content: "👥 ";
+}
+
+.table-button.edit::before {
+    content: "✏️ ";
+}
+
+.table-button.delete::before {
+    content: "🗑️ ";
 }

@@ -16,6 +16,12 @@ class Entreprise
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $contact = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $fichier = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -29,6 +35,30 @@ class Entreprise
     public function setNom(string $nom): static
     {
         $this->nom = $nom;
+
+        return $this;
+    }
+
+    public function getContact(): ?string
+    {
+        return $this->contact;
+    }
+
+    public function setContact(string $contact): static
+    {
+        $this->contact = $contact;
+
+        return $this;
+    }
+
+    public function getFichier(): ?string
+    {
+        return $this->fichier;
+    }
+
+    public function setFichier(string $fichier): static
+    {
+        $this->fichier = $fichier;
 
         return $this;
     }

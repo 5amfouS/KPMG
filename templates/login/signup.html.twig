@@ -1,41 +1,39 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Inscription{% endblock %}
-
+{% block title %}📝 Inscription{% endblock %}
+{% block body_class %}before-login{% endblock %}
 {% block body %}
-<div class="container">
-    <h1>Inscription</h1>
+<main>
+    <h1>📝 Inscription</h1>
 
     {% for message in app.flashes('error') %}
-        <div class="alert alert-danger">{{ message }}</div>
+        <div class="alert alert-error">❌ {{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">✅ {{ message }}</div>
     {% endfor %}
 
     <form method="post" action="{{ path('app_signup') }}" id="signupForm" novalidate>
-        <div>
-            <label for="nom">Nom complet:</label>
-            <input type="text" id="nom" name="nom" required>
-        </div>
-        <div>
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-        </div>
-        <div>
-            <label for="tel">Téléphone:</label>
-            <input type="tel" id="tel" name="tel" placeholder="Ex: +21612345678">
-        </div>
-        <div>
-            <label for="password">Mot de passe:</label>
-            <input type="password" id="mdp" name="mdp" required minlength="6">
-        </div>
-        <div>
-            <label for="confirm_password">Confirmer le mot de passe:</label>
-            <input type="password" id="confirmermdp" name="confirmermdp" required minlength="6">
-        </div>
+        <label for="nom">👤 Nom complet :</label>
+        <input type="text" id="nom" name="nom" placeholder="Votre nom complet" required>
+
+        <label for="email">📧 Email :</label>
+        <input type="email" id="email" name="email" placeholder="Votre email" required>
+
+        <label for="tel">📱 Téléphone (optionnel) :</label>
+        <input type="tel" id="tel" name="tel" placeholder="Ex : +21612345678">
+
+        <label for="mdp">🔑 Mot de passe :</label>
+        <input type="password" id="mdp" name="mdp" placeholder="Au moins 6 caractères" required minlength="6">
+
+        <label for="confirmermdp">🔑 Confirmer le mot de passe :</label>
+        <input type="password" id="confirmermdp" name="confirmermdp" placeholder="Confirmez le mot de passe" required minlength="6">
+
         <button type="submit">S'inscrire</button>
     </form>
 
-    <p>Déjà un compte ? <a href="{{ path('app_signin') }}">Se connecter</a></p>
-</div>
+    <p style="margin-top: 20px;">Déjà un compte ? <a href="{{ path('app_signin') }}">Se connecter</a></p>
+</main>
 
 <script>
 document.getElementById('signupForm').addEventListener('submit', function(event) {
@@ -51,7 +49,6 @@ document.getElementById('signupForm').addEventListener('submit', function(event)
         errors.push("Le nom complet est obligatoire.");
     }
 
-    // Simple validation email regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         errors.push("Veuillez saisir une adresse email valide.");
@@ -66,7 +63,6 @@ document.getElementById('signupForm').addEventListener('submit', function(event)
     }
 
     if (tel) {
-        // Exemple simple : doit être chiffres ou +, 8 à 15 caractères
         const telRegex = /^[+0-9\s\-]{8,15}$/;
         if (!telRegex.test(tel)) {
             errors.push("Le numéro de téléphone n'est pas valide.");

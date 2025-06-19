@@ -22,7 +22,7 @@ use TCPDF;
 use Psr\Log\LoggerInterface;
 use setasign\Fpdi\TcpdfFpdi;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 
 function generateRandomPassword($length = 5): string {
@@ -54,6 +54,191 @@ final class UtilisateurController extends AbstractController
             'utilisateurs' => $utilisateurs,
         ]);
     }
+
+    #[Route('/entreprise/{id}/employes', name: 'app_employes_entreprise')]
+    public function employesParEntreprise(int $id, EntityManagerInterface $em, Request $request): Response
+    {
+        $session = $request->getSession();
+
+        if (!$session->has('user_id')) {
+            return $this->redirectToRoute('app_signin');
+        }
+
+        if ($session->get('user_role') === "ADMIN") {
+            return $this->redirectToRoute('app_utilisateurs');
+        }
+
+        $entreprise = $em->getRepository(Entreprise::class)->find($id);
+
+        if (!$entreprise) {
+            throw $this->createNotFoundException("Entreprise introuvable.");
+        }
+
+        $employes = $em->getRepository(Employe::class)->findBy(['entreprise' => $entreprise]);
+
+        return $this->render('utilisateur/employes.html.twig', [
+            'employes' => $employes,
+            'entreprise' => $entreprise,
+        ]);
+    }
+
+
+
+    #[Route('/entreprises', name: 'app_entreprises')]
+    public function listEntreprises(Request $request, EntityManagerInterface $em): Response
+    {
+        $session = $request->getSession();
+
+        if (!$session->has('user_id')) {
+            return $this->redirectToRoute('app_signin');
+        }
+
+        if ($session->get('user_role') === "ADMIN") {
+            return $this->redirectToRoute('app_utilisateurs');
+        }
+
+        $entreprises = $em->getRepository(Entreprise::class)->findAll();
+
+        // Tableau [id_entreprise => nb_employes]
+        $employeCounts = [];
+        foreach ($entreprises as $entreprise) {
+            $count = $em->createQueryBuilder()
+                ->select('COUNT(e.id)')
+                ->from(Employe::class, 'e')
+                ->where('e.entreprise = :ent')
+                ->setParameter('ent', $entreprise->getId())
+                ->getQuery()
+                ->getSingleScalarResult();
+
+            $employeCounts[$entreprise->getId()] = (int) $count;
+        }
+
+        return $this->render('utilisateur/entreprises.html.twig', [
+            'entreprises' => $entreprises,
+            'employeCounts' => $employeCounts,
+        ]);
+    }
+
+    #[Route('/entreprise/{entreprise_id}/employe/ajouter', name: 'app_ajouter_employe')]
+    public function ajouterEmploye(Request $request, EntityManagerInterface $em, int $entreprise_id): Response
+    {
+        $entreprise = $em->getRepository(Entreprise::class)->find($entreprise_id);
+
+        if (!$entreprise) {
+            throw $this->createNotFoundException("Entreprise introuvable.");
+        }
+
+        $error = null;
+        $success = null;
+
+        if ($request->isMethod('POST')) {
+            $id = trim($request->request->get('id'));
+            $nom = trim($request->request->get('nom'));
+            $email = trim($request->request->get('email'));
+
+            if (!ctype_digit($id)) {
+                $error = "Le matricule (ID) doit être un entier.";
+            } elseif (empty($nom)) {
+                $error = "Le nom est obligatoire.";
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $error = "Adresse email invalide.";
+            } elseif ($em->getRepository(Employe::class)->find((int)$id)) {
+                $error = "Un employé avec cet ID existe déjà.";
+            } else {
+                $employe = new Employe();
+                $employe->setId((int)$id); // nécessite que l'entité ait setId()
+                $employe->setNom($nom);
+                $employe->setEmail($email);
+                $employe->setEntreprise($entreprise);
+
+                $em->persist($employe);
+                $em->flush();
+
+                $success = "Employé ajouté avec succès.";
+            }
+        }
+
+
+        return $this->render('utilisateur/ajouteremploye.html.twig', [
+            'entreprise' => $entreprise,
+            'error' => $error,
+            'success' => $success,
+        ]);
+    }
+
+    #[Route('/employe/{id}/modifier', name: 'app_modifier_employe')]
+    public function modifierEmploye(int $id, Request $request, EntityManagerInterface $em): Response
+    {
+        $employe = $em->getRepository(Employe::class)->find($id);
+        if (!$employe) {
+            throw $this->createNotFoundException("Employé introuvable.");
+        }
+
+        $error = null;
+        $success = null;
+
+        if ($request->isMethod('POST')) {
+            $nom = trim($request->request->get('nom'));
+            $email = trim($request->request->get('email'));
+
+            if (empty($nom)) {
+                $error = "Le nom est obligatoire.";
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $error = "Adresse email invalide.";
+            } else {
+                $employe->setNom($nom);
+                $employe->setEmail($email);
+                $em->flush();
+                $success = "Employé mis à jour avec succès.";
+            }
+        }
+
+        return $this->render('utilisateur/modifieremploye.html.twig', [
+            'employe' => $employe,
+            'error' => $error,
+            'success' => $success,
+        ]);
+    }
+
+
+    #[Route('/entreprise/{id}/modifier', name: 'app_modifierentreprise', methods: ['GET', 'POST'])]
+    public function modifierEntreprise(int $id, Request $request, EntityManagerInterface $em): Response
+    {
+        $entreprise = $em->getRepository(Entreprise::class)->find($id);
+
+        if (!$entreprise) {
+            throw $this->createNotFoundException("Entreprise introuvable.");
+        }
+
+        $error = null;
+        $success = null;
+
+        if ($request->isMethod('POST')) {
+            $nom = trim($request->request->get('nom'));
+            $contact = trim($request->request->get('contact'));
+
+            if (empty($nom)) {
+                $error = "Le nom de l'entreprise est obligatoire.";
+            } elseif (!filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+                $error = "Le contact email est invalide.";
+            } else {
+                $entreprise->setNom($nom);
+                $entreprise->setContact($contact);
+
+                $em->flush();
+
+                $success = "Entreprise mise à jour avec succès.";
+            }
+        }
+
+        return $this->render('utilisateur/modifierentreprise.html.twig', [
+            'entreprise' => $entreprise,
+            'error' => $error,
+            'success' => $success,
+        ]);
+    }
+
+
 
 
     #[Route('/monespace', name: 'app_monespace')]
@@ -115,6 +300,9 @@ final class UtilisateurController extends AbstractController
                 return $this->redirectToRoute('app_monespace');
             }
         }
+
+
+        //permet d'enlever les anciens mdp quand je depsse 5 mdp
 
         if (count($anciensMdp) >= 5) {
             $plusAncienMdp = $em->getRepository(Mdp::class)->createQueryBuilder('m')
@@ -295,4 +483,169 @@ public function mailing(Request $request, EntityManagerInterface $em, LoggerInte
         'entreprises' => $entreprises
     ]);
 }
+
+
+    #[Route('/AjouterEntreprise', name: 'app_ajouterentreprise', methods: ['GET', 'POST'])]
+    public function AjouterEntreprise(Request $request, EntityManagerInterface $em): Response
+    {
+        $session = $request->getSession();
+
+        if (!$session->has('user_id')) {
+            return $this->redirectToRoute('app_signin');
+        }
+
+        if ($session->get('user_role') === "ADMIN") {
+            return $this->redirectToRoute('app_utilsateurs');
+        }
+
+        $nom = '';
+        $email = '';
+        $error = null;
+        $success = null;
+
+        if ($request->isMethod('POST')) {
+            $nom = trim($request->request->get('nom', ''));
+            $email = trim($request->request->get('email', ''));
+
+            if (empty($nom)) {
+                $error = "Le nom de l'entreprise est obligatoire.";
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $error = "L'adresse email est invalide.";
+            } else {
+                // Vérifie si une entreprise avec ce nom existe déjà
+                $existing = $em->getRepository(Entreprise::class)->findOneBy(['nom' => $nom]);
+
+                if ($existing) {
+                    $error = "Une entreprise avec ce nom existe déjà.";
+                } else {
+                    $entreprise = new Entreprise();
+                    $entreprise->setNom($nom);
+                    $entreprise->setContact($email);
+
+                    $em->persist($entreprise);
+                    $em->flush();
+
+                    $success = "Entreprise ajoutée avec succès !";
+                    $nom = '';
+                    $email = '';
+                }
+            }
+        }
+
+        return $this->render('utilisateur/ajouterentreprise.html.twig', [
+            'nom' => $nom,
+            'email' => $email,
+            'error' => $error,
+            'success' => $success,
+        ]);
+    }
+
+
+
+    #[Route('/entreprise/{id}/supprimer', name: 'app_supprimer_entreprise', methods: ['POST'])]
+    public function supprimerEntreprise(int $id, EntityManagerInterface $em, Request $request): Response
+    {
+        $entreprise = $em->getRepository(Entreprise::class)->find($id);
+
+        if (!$entreprise) {
+            throw $this->createNotFoundException("Entreprise introuvable");
+        }
+
+        $submittedToken = $request->request->get('_token');
+        if ($this->isCsrfTokenValid('delete' . $entreprise->getId(), $submittedToken)) {
+            // Supprime les employés liés
+            $employes = $em->getRepository(Employe::class)->findBy(['entreprise' => $entreprise]);
+            foreach ($employes as $employe) {
+                $em->remove($employe);
+            }
+
+            $em->remove($entreprise);
+            $em->flush();
+
+            $this->addFlash('success', 'Entreprise supprimée avec succès.');
+        }
+
+        return $this->redirectToRoute('app_entreprises');
+    }
+
+    #[Route('/employe/{id}/supprimer', name: 'app_supprimer_employe', methods: ['POST'])]
+    public function supprimerEmploye(int $id, Request $request, EntityManagerInterface $em): Response
+    {
+        $employe = $em->getRepository(Employe::class)->find($id);
+        if (!$employe) {
+            throw $this->createNotFoundException("Employé introuvable.");
+        }
+
+        $submittedToken = $request->request->get('_token');
+        if ($this->isCsrfTokenValid('delete' . $employe->getId(), $submittedToken)) {
+            $entrepriseId = $employe->getEntreprise()->getId();
+            $em->remove($employe);
+            $em->flush();
+        }
+
+        return $this->redirectToRoute('app_employes_entreprise', [
+            'id' => $entrepriseId
+        ]);
+    }
+
+
+
+    #[Route('/entreprise/{entreprise_id}/import', name: 'app_importer_employes', methods: ['POST'])]
+    public function importerEmployes(int $entreprise_id, Request $request, EntityManagerInterface $em): Response
+    {
+        $entreprise = $em->getRepository(Entreprise::class)->find($entreprise_id);
+        if (!$entreprise) {
+            throw $this->createNotFoundException("Entreprise introuvable.");
+        }
+
+        $file = $request->files->get('excel_file');
+        if (!$file) {
+            $this->addFlash('error', "Aucun fichier n’a été sélectionné.");
+            return $this->redirectToRoute('app_employes_entreprise', ['id' => $entreprise_id]);
+        }
+
+        $spreadsheet = IOFactory::load($file->getPathname());
+        $rows = $spreadsheet->getActiveSheet()->toArray();
+
+        $nbAjoutes = 0;
+        foreach ($rows as $index => $row) {
+            if ($index === 0) continue; // Ignorer l'entête
+
+            $idXls = trim($row[0] ?? '');
+            $nomEntrepriseXls = strtolower(trim($row[1] ?? ''));
+            $nomXls = trim($row[2] ?? '');
+            $emailXls = trim($row[3] ?? '');
+
+            if (
+                $nomEntrepriseXls === strtolower(trim($entreprise->getNom())) &&
+                !empty($nomXls) &&
+                filter_var($emailXls, FILTER_VALIDATE_EMAIL)
+            ) {
+                // Vérifie si l'ID est déjà utilisé (évite les doublons)
+                $existant = $em->getRepository(Employe::class)->find($idXls);
+                if ($existant) {
+                    continue; // On ignore si l'ID existe déjà
+                }
+
+                $employe = new Employe();
+                $employe->setId((int) $idXls); // Nécessite que l'ID ne soit pas auto-généré
+                $employe->setNom($nomXls);
+                $employe->setEmail($emailXls);
+                $employe->setEntreprise($entreprise);
+                $em->persist($employe);
+                $nbAjoutes++;
+            }
+        }
+
+
+        if($nbAjoutes>0){
+            $entreprise->setFichier('oui');
+        }
+        $em->persist($entreprise);
+        $em->flush();
+        $this->addFlash('success', "$nbAjoutes employé(s) importé(s) avec succès.");
+        return $this->redirectToRoute('app_employes_entreprise', ['id' => $entreprise_id]);
+    }
+
+
 }
