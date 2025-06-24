@@ -51,49 +51,78 @@ paie.zip/
 
 ---
 
-## ⚙️ Stack Technique
+## Prérequis 
 
 - **Back-end** : Symfony (PHP)
 - **Base de données** : MySQL
-- **Génération PDF** : Dompdf
-- **Envoi SMS** : Gammu + Modem 4G (port COM)
-- **Importation des employés** : via fichier Excel (.xlsx)
-- **Front-end** : HTML5 / CSS3 avec templates Twig
+- **Envoi SMS** : Gammu 1.33.0 + Modem 4G (port COM)
 
 ---
 
-## 📲 Fonctionnalités Clés
+## Comment utiliser la plateforme ?
 
-- ✅ Interface RH ergonomique
-- ✅ Envoi sécurisé des fiches de paie
-- ✅ Gestion complète des entreprises et employés
-- ✅ Interface administrateur pour la supervision
-- ✅ Importation par lot des employés via Excel
+### 1️⃣ Cloner et préparer le projet
 
----
+1. Télécharger ou cloner le projet Symfony.
+2. Exécuter les commandes suivantes dans le terminal à la racine du projet :
 
-## 🚀 Scénario d’utilisation
+```bash
+symfony console doctrine:database:create
+symfony console make:migration
+symfony console doctrine:migrations:migrate
+# Si la commande précédente échoue :
+symfony console doctrine:schema:update --force
 
-1. Le RH se connecte à la plateforme.
-2. Il crée une entreprise.
-3. Il ajoute les employés via formulaire ou fichier Excel.
-4. Il sélectionne les fiches de paie à envoyer.
-5. Chaque PDF est protégé et envoyé par mail.
-6. Le mot de passe est envoyé par SMS à chaque employé.
+2️⃣ Configurer le modem SMS avec Gammu
+Brancher votre modem 4G (clé USB) et identifier le port COM utilisé (ex: COM4) via le gestionnaire de périphériques.
 
----
+Créer un fichier gammurc (sans extension) dans le même dossier que gammu.exe, avec le contenu suivant :
+[gammu]
+port = COM4
+connection = at19200
 
-## 📌 Améliorations futures
+3️⃣ Automatiser la sauvegarde de la base de données
+Créer un fichier script.bat avec le contenu suivant :
 
-- 📎 Signature électronique des PDF
-- 📊 Statistiques RH et journal d’envoi
-- 📱 Version mobile (PWA ou app native)
-- 🔁 Ré-envoi automatique en cas d’échec de transmission
-- ☁️ Intégration stockage cloud (Google Drive / Dropbox)
+bat
+Copier
+Modifier
 
----
+## Comment utiliser la plateforme?
 
-## 🧑‍💻 Auteur
+1-Télécharger l'intégralité du projet
+2-Faire les commandes:
+-symfony console doctrine:database:create
+-symfony.exe console make:migration 
+-symfony.exe console doctrine:schema:update --force ---> si la commande précédente ne passe pas.
+-symfony console doctrine:migrations:migrate
+2-Brancher et identifier le port associé au modem d'envoi d'sms 
+3-Créer un fichier gammurc (sans extension) dans le même dossier que l'executable gammu.exe :
+  [gammu]
+  port = COM4 --> Selon le port identifié dans l'étape 2.
+  connection = at19200
+4-Creer une instance d'une fréquence d'un jour dans le planificateur de taches et pointer sur le fichier script.bat:
+  @echo off
+  setlocal
+  
+  :: Lire le chemin depuis config.txt
+  set /p BACKUP_PATH=<"C:\Users\Pc\Desktop\KPMG\Export\config.txt"
+  
+  :: Créer un horodatage
+  set TIMESTAMP=%DATE:~-4%%DATE:~3,2%%DATE:~0,2%_%TIME:~0,2%%TIME:~3,2%
+  set TIMESTAMP=%TIMESTAMP: =0%
+  
+  :: Exporter la base
+  "C:\xampp\mysql\bin\mysqldump.exe" -u root KPMG > "%BACKUP_PATH%\backup_%TIMESTAMP%.sql"
+  
+  endlocal
+5-Creer un fichier config.txt dans le meme dossier que script.bat et contenant le lien de sauvegarde de la base de donnée.
+6- Lancer le serveur symfony avec la commande suivante:
+-symfony server:start et acceder à l'adresse suivante: http://127.0.0.1:8000/signin
+
+
+
+## Auteur
 
 Projet réalisé par **Sami Ben Abdelkader**.  
 Contact : [smail.benabdelkader@gmail.com](mailto:smail.benabdelkader@gmail.com)
