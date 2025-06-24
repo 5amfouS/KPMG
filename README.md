@@ -100,39 +100,14 @@ connection = at19200
   
   endlocal
 ```
-## Comment utiliser la plateforme?
+  2. Dans le même dossier, créer un fichier config.txt avec le chemin de base où sauvgarder la base de donnée.
 
-1-Télécharger l'intégralité du projet
-2-Faire les commandes:
--symfony console doctrine:database:create
--symfony.exe console make:migration 
--symfony.exe console doctrine:schema:update --force ---> si la commande précédente ne passe pas.
--symfony console doctrine:migrations:migrate
-2-Brancher et identifier le port associé au modem d'envoi d'sms 
-3-Créer un fichier gammurc (sans extension) dans le même dossier que l'executable gammu.exe :
-  [gammu]
-  port = COM4 --> Selon le port identifié dans l'étape 2.
-  connection = at19200
-4-Creer une instance d'une fréquence d'un jour dans le planificateur de taches et pointer sur le fichier script.bat:
-  @echo off
-  setlocal
-  
-  :: Lire le chemin depuis config.txt
-  set /p BACKUP_PATH=<"C:\Users\Pc\Desktop\KPMG\Export\config.txt"
-  
-  :: Créer un horodatage
-  set TIMESTAMP=%DATE:~-4%%DATE:~3,2%%DATE:~0,2%_%TIME:~0,2%%TIME:~3,2%
-  set TIMESTAMP=%TIMESTAMP: =0%
-  
-  :: Exporter la base
-  "C:\xampp\mysql\bin\mysqldump.exe" -u root KPMG > "%BACKUP_PATH%\backup_%TIMESTAMP%.sql"
-  
-  endlocal
-5-Creer un fichier config.txt dans le meme dossier que script.bat et contenant le lien de sauvegarde de la base de donnée.
-6- Lancer le serveur symfony avec la commande suivante:
--symfony server:start et acceder à l'adresse suivante: http://127.0.0.1:8000/signin
-
-
+#### 4️⃣ Lancer le projet
+  1. Executer la commande ci-dessous à la racine du projet:
+```
+-symfony server:start 
+```
+  2. Finalement acceder à la plateforme grace a l'url: [http://127.0.0.1:8000/signin]
 
 ## Auteur
 
