@@ -1,7 +1,7 @@
 # KPMG
-# 💼 Plateforme de Gestion des Entreprises et Employés
+# Plateforme de Gestion des Entreprises et Employés
 
-## 🎯 Objectif
+## Objectif
 
 Ce projet est une plateforme web destinée aux services RH (ressources humaines) pour gérer :
 - les entreprises,
@@ -14,14 +14,15 @@ Deux types d’utilisateurs peuvent accéder au système :
 
 ---
 
-## 👥 Utilisateurs & Rôles
+## Utilisateurs & Rôles
 
 | Rôle      | Fonctionnalités |
 |-----------|-----------------|
 | **RH**    | - Créer, modifier, supprimer des entreprises  
              - Gérer les employés  
-             - Envoyer des fiches de paie sécurisées (PDF protégé par mot de passe, envoyé par SMS) |
+|           |  - Envoyer des fiches de paie sécurisées (PDF protégé par mot de passe, envoyé par SMS) |
 | **Admin** | - Gérer les utilisateurs RH  
+             - Envoyer des fiches de paie sécurisées (PDF protégé par mot de passe, envoyé par SMS) |
              - Surveiller la conformité du système |
 
 ---
