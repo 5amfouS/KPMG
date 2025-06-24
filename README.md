@@ -19,36 +19,15 @@ Deux types d’utilisateurs peuvent accéder au système :
 | Rôle      | Fonctionnalités |
 |-----------|-----------------|
 | **RH**    | - Créer, modifier, supprimer des entreprises  
-|            |- Gérer les employés  
-|           |  - Envoyer des fiches de paie sécurisées (PDF protégé par mot de passe, envoyé par SMS) |
+|           | - Gérer les employés  
+|           | - Envoyer des fiches de paie sécurisées (PDF protégé par mot de passe, envoyé par SMS) |
 | **Admin** | - Gérer les utilisateurs RH  
-|           |- Envoyer des fiches de paie sécurisées (PDF protégé par mot de passe, envoyé par SMS) |
+|           | - Envoyer des fiches de paie sécurisées (PDF protégé par mot de passe, envoyé par SMS) |
 |           | - Surveiller la conformité du système |
 
 ---
 
-## 🧱 Structure de la Base de Données
-
-### `entreprise`
-- `id` *(int)* : Identifiant unique
-- `nom` *(string)* : Nom de l’entreprise
-
-### `employe`
-- `id` *(int)* : Identifiant unique
-- `cin` *(string)* : Numéro d’identité
-- `nom` *(string)* : Nom complet
-- `email` *(string)* : Adresse email
-- `entreprise_id` *(FK)* : Référence vers l’entreprise
-
-### `user`
-- `id` *(int)* : Identifiant
-- `email` *(string)* : Adresse email
-- `mot_de_passe` *(string)* : Mot de passe chiffré
-- `role` *(enum)* : `ROLE_RH` ou `ROLE_ADMIN`
-
----
-
-## 🔐 Sécurité des fiches de paie
+##  Sécurité des fiches de paie
 
 - Les fiches de paie sont générées au format **PDF sécurisé**.
 - Le fichier PDF est **protégé par mot de passe** : le mot de passe est le **CIN de l’employé**.
@@ -63,12 +42,11 @@ Deux types d’utilisateurs peuvent accéder au système :
 
 Les fiches de paie sont organisées dans un fichier ZIP selon cette structure :
 
-paie.zip/
-└── paie/
-└── {nom_entreprise}/
-└── {numero_employe}/
-└── fiche_de_paie_modele.pdf
-
+paie.zip/paie/{nom_de_l'entreprise}/{matricule_de_l'employé}/fiche_de_paie_modele.pdf
+|__paie
+     |__{nom_de_l'entreprise}
+            |__{matricule_de_l'employé}
+                  |__ fiche_de_paie_modele.pdf
 
 ---
 
