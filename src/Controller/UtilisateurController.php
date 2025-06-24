@@ -16,6 +16,7 @@ use ZipArchive;
 use App\Entity\Employe;
 use App\Entity\Mdp;
 use App\Entity\Backup;
+use App\Entity\Login;
 use Symfony\Component\PasswordHasher\Hasher\NativePasswordHasher;
 use setasign\Fpdi\Fpdi;
 use setasign\Fpdi\PdfReader;
@@ -36,7 +37,6 @@ function generateRandomPassword($length = 5): string {
 }
 final class UtilisateurController extends AbstractController
 {
-
 
     #[Route('/utilisateurs', name: 'app_utilisateurs')]
     public function listUtilisateurs(Request $request,EntityManagerInterface $em): Response
@@ -60,6 +60,38 @@ final class UtilisateurController extends AbstractController
             'utilisateurs' => $utilisateurs,
         ]);
     }
+
+    #[Route('/logs', name: 'app_logs')]
+    public function listLogs(Request $request, EntityManagerInterface $em): Response
+    {
+        $session = $request->getSession();
+
+        if (!$session->has('user_id')) {
+            return $this->redirectToRoute('app_signin');
+        } elseif ($session->get('user_role') !== "ADMIN") {
+            return $this->redirectToRoute('app_mailing');
+        }
+
+        $filter = $request->query->get('filter', 'success'); // Par défaut on montre les réussites
+        $repository = $em->getRepository(Login::class);
+
+        if ($filter === 'failed') {
+            $logs = $repository->findBy(['succes' => 'false'], ['date_login' => 'DESC']);
+            $nextFilter = 'success';
+            $filterText = 'Échouées';
+        } else {
+            $logs = $repository->findBy(['succes' => 'true'], ['date_login' => 'DESC']);
+            $nextFilter = 'failed';
+            $filterText = 'Réussies';
+        }
+
+        return $this->render('utilisateur/logs.html.twig', [
+            'logs' => $logs,
+            'next_filter' => $nextFilter,
+            'filter_text' => $filterText,
+        ]);
+    }
+
 
     #[Route('/entreprise/{id}/employes', name: 'app_employes_entreprise')]
     public function employesParEntreprise(int $id, EntityManagerInterface $em, Request $request): Response

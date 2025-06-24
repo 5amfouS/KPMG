@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Historique des connexions{% endblock %}
+{% block body_class %}after-login{% endblock %}
+
+{% block body %}
+  <header>
+    <div class="user-info">
+      <strong>{{ app.session.get('user_nom') }}</strong><br>
+      <small>{{ app.session.get('user_role') }}</small>
+    </div>
+    <nav class="nav-links">
+      <a href="{{ path('app_utilisateurs') }}" class="btn blue">👤 Utilisateurs</a>
+      <a href="{{ path('app_logs') }}" class="btn blue">👨‍💻 Historique des connexions</a>
+      <a href="{{ path('app_choisir_backup_path') }}" class="btn blue">📥 Chemin de la BDD</a>
+      <a href="{{ path('app_monespace') }}" class="btn blue">👤 Mon espace</a>
+      <a href="{{ path('app_logout') }}" class="btn red">🚪 Déconnexion</a>
+    </nav>
+  </header>
+
+  <h1>Historique des connexions</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Adresse IP</th>
+        <th>Date de connexion</th>
+        <th>
+          <a href="{{ path('app_logs', {'filter': next_filter}) }}" class="filter-btn">
+            Afficher les connexions {{ filter_text }}
+          </a>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+        <tr>
+          <td>{{ log.id }}</td>
+          <td>{{ log.AdresseIp }}</td>
+          <td>{{ log.dateLogin|date('d/m/Y H:i') }}</td>
+          <td>{{ log.succes }}</td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="4" class="text-center">Aucun log trouvé.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

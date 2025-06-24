@@ -16,7 +16,8 @@
             <a href="{{ path('app_monespace') }}" class="btn blue">👤 Mon espace</a>
         {% endif %}
         {% if app.session.get('user_role') == 'ADMIN' %}
-            <a href="{{ path('app_utilisateurs') }}" class="btn blue">👥 Utilisateurs</a>
+          <a href="{{ path('app_utilisateurs') }}" class="btn blue">👥 Utilisateurs</a>
+          <a href="{{ path('app_logs') }}" class="btn blue">👨‍💻​ Historique des connexions</a>
         {% endif %}
 
         <a href="{{ path('app_logout') }}" class="btn red">🚪 Déconnexion</a>
