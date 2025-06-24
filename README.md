@@ -100,7 +100,7 @@ connection = at19200
 ```
   2. Dans le même dossier, créer un fichier config.txt avec le chemin de base où sauvgarder la base de donnée.
 
-#### 4️⃣ Lancer le projet
+### 4️⃣ Lancer le projet
   1. Executer la commande ci-dessous à la racine du projet:
 ```
 -symfony server:start 
