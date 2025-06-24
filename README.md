@@ -1,4 +1,3 @@
-# KPMG
 # Plateforme de Gestion des Entreprises et Employés
 
 ## Objectif
