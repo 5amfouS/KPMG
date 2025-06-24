@@ -68,10 +68,10 @@ paie.zip/
 
 ```bash
 symfony console doctrine:database:create
-symfony console make:migration
+symfony console make:migration # Si cette commande échoue alors éxecuter: symfony console doctrine:schema:update --force
 symfony console doctrine:migrations:migrate
-# Si la commande précédente échoue :
-symfony console doctrine:schema:update --force
+```
+
 
 2️⃣ Configurer le modem SMS avec Gammu
 Brancher votre modem 4G (clé USB) et identifier le port COM utilisé (ex: COM4) via le gestionnaire de périphériques.
