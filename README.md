@@ -66,7 +66,7 @@ paie.zip/
 1. Télécharger ou cloner le projet Symfony.
 2. Exécuter les commandes suivantes dans le terminal à la racine du projet :
 
-```bash
+```
 symfony console doctrine:database:create
 symfony console make:migration # Si cette commande échoue alors éxecuter: symfony console doctrine:schema:update --force
 symfony console doctrine:migrations:migrate
