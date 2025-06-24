@@ -41,13 +41,13 @@ Deux types d’utilisateurs peuvent accéder au système :
 ## Structure des fichiers PDF
 
 Les fiches de paie sont organisées dans un fichier ZIP selon cette structure :
-
+```
 paie.zip/
 └── paie/
 └── {nom_entreprise}/
 └── {numero_employe}/
 └── fiche_de_paie_modele.pdf
-
+```
 
 ---
 
