@@ -29,7 +29,7 @@ Deux types d’utilisateurs peuvent accéder au système :
 ##  Sécurité des fiches de paie
 
 - Les fiches de paie sont générées au format **PDF sécurisé**.
-- Le fichier PDF est **protégé par mot de passe** : le mot de passe est le **CIN de l’employé**.
+- Le fichier PDF est **protégé par mot de passe** : le mot de passe est **généré automatiquement**.
 - Le mot de passe est **envoyé automatiquement par SMS** via un modem connecté au serveur (Gammu).
 - L’employé reçoit :
   - le **fichier PDF par email**,
