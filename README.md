@@ -107,7 +107,7 @@ connection = at19200
 ```
 -symfony server:start 
 ```
-  2. Finalement acceder à la plateforme grace a l'url: [http://127.0.0.1:8000/signin]
+  2. Finalement acceder à la plateforme grace a l'url: http://127.0.0.1:8000/signin
 
 ## Auteur
 
