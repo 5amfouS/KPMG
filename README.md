@@ -19,8 +19,8 @@ Deux types d’utilisateurs peuvent accéder au système :
 | Rôle      | Fonctionnalités |
 |-----------|-----------------|
 | **RH**    | - Créer, modifier, supprimer des entreprises  
-|           | - Gérer les employés  
-|           | - Envoyer des fiches de paie sécurisées (PDF protégé par mot de passe, envoyé par SMS) |
+|           | - Créer, modifier, supprimer des employés  
+|           | - Envoyer des fiches de paie sécurisées aux employés (PDF protégé par mot de passe, envoyé par SMS) |
 | **Admin** | - Gérer les utilisateurs RH  
 |           | - Envoyer des fiches de paie sécurisées (PDF protégé par mot de passe, envoyé par SMS) |
 |           | - Surveiller la conformité du système |
