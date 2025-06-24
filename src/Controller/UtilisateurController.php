@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use ZipArchive;
 use App\Entity\Employe;
 use App\Entity\Mdp;
+use App\Entity\Backup;
 use Symfony\Component\PasswordHasher\Hasher\NativePasswordHasher;
 use setasign\Fpdi\Fpdi;
 use setasign\Fpdi\PdfReader;
@@ -23,7 +24,12 @@ use Psr\Log\LoggerInterface;
 use setasign\Fpdi\TcpdfFpdi;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 
+
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Filesystem\Filesystem;
 
 function generateRandomPassword($length = 5): string {
     return substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz123456789'), 0, $length);
@@ -122,6 +128,17 @@ final class UtilisateurController extends AbstractController
     #[Route('/entreprise/{entreprise_id}/employe/ajouter', name: 'app_ajouter_employe')]
     public function ajouterEmploye(Request $request, EntityManagerInterface $em, int $entreprise_id): Response
     {
+
+        $session = $request->getSession();
+
+        if (!$session->has('user_id')) {
+            return $this->redirectToRoute('app_signin');
+        }
+
+        if ($session->get('user_role') === "ADMIN") {
+            return $this->redirectToRoute('app_utilsateurs');
+        }
+
         $entreprise = $em->getRepository(Entreprise::class)->find($entreprise_id);
 
         if (!$entreprise) {
@@ -135,6 +152,8 @@ final class UtilisateurController extends AbstractController
             $id = trim($request->request->get('id'));
             $nom = trim($request->request->get('nom'));
             $email = trim($request->request->get('email'));
+            $tel = preg_replace('/\D/', '', trim($request->request->get('tel')));
+
 
             if (!ctype_digit($id)) {
                 $error = "Le matricule (ID) doit être un entier.";
@@ -142,6 +161,8 @@ final class UtilisateurController extends AbstractController
                 $error = "Le nom est obligatoire.";
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $error = "Adresse email invalide.";
+            } elseif (!preg_match('/^[2459]\d{7}$/', $tel)) {
+                $error = "Numéro de téléphone invalide. Il doit contenir 8 chiffres et commencer par 2, 4, 5 ou 9.";
             } elseif ($em->getRepository(Employe::class)->find((int)$id)) {
                 $error = "Un employé avec cet ID existe déjà.";
             } else {
@@ -150,6 +171,7 @@ final class UtilisateurController extends AbstractController
                 $employe->setNom($nom);
                 $employe->setEmail($email);
                 $employe->setEntreprise($entreprise);
+                $employe->setTel($tel);
 
                 $em->persist($employe);
                 $em->flush();
@@ -169,6 +191,17 @@ final class UtilisateurController extends AbstractController
     #[Route('/employe/{id}/modifier', name: 'app_modifier_employe')]
     public function modifierEmploye(int $id, Request $request, EntityManagerInterface $em): Response
     {
+
+        $session = $request->getSession();
+
+        if (!$session->has('user_id')) {
+            return $this->redirectToRoute('app_signin');
+        }
+
+        if ($session->get('user_role') === "ADMIN") {
+            return $this->redirectToRoute('app_utilsateurs');
+        }
+
         $employe = $em->getRepository(Employe::class)->find($id);
         if (!$employe) {
             throw $this->createNotFoundException("Employé introuvable.");
@@ -180,14 +213,17 @@ final class UtilisateurController extends AbstractController
         if ($request->isMethod('POST')) {
             $nom = trim($request->request->get('nom'));
             $email = trim($request->request->get('email'));
-
+            $tel = preg_replace('/\D/', '', trim($request->request->get('tel')));
             if (empty($nom)) {
                 $error = "Le nom est obligatoire.";
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $error = "Adresse email invalide.";
+            } elseif (!preg_match('/^[2459]\d{7}$/', $tel)) {
+                $error = "Numéro de téléphone invalide. Il doit contenir 8 chiffres et commencer par 2, 4, 5 ou 9.";
             } else {
                 $employe->setNom($nom);
                 $employe->setEmail($email);
+                $employe->setTel($tel);
                 $em->flush();
                 $success = "Employé mis à jour avec succès.";
             }
@@ -204,6 +240,18 @@ final class UtilisateurController extends AbstractController
     #[Route('/entreprise/{id}/modifier', name: 'app_modifierentreprise', methods: ['GET', 'POST'])]
     public function modifierEntreprise(int $id, Request $request, EntityManagerInterface $em): Response
     {
+
+        $session = $request->getSession();
+
+        if (!$session->has('user_id')) {
+            return $this->redirectToRoute('app_signin');
+        }
+
+        if ($session->get('user_role') === "ADMIN") {
+            return $this->redirectToRoute('app_utilsateurs');
+        }
+
+        
         $entreprise = $em->getRepository(Entreprise::class)->find($id);
 
         if (!$entreprise) {
@@ -318,7 +366,7 @@ final class UtilisateurController extends AbstractController
             }
         }
 
-        // Si tout est bon, enregistrer le nouveau mot de passe
+        // 
         $newMdp = new Mdp();
         $newMdp->setUtilisateur($user);
         $newMdp->setMdp($hasher->hash($nouveau));
@@ -344,7 +392,7 @@ final class UtilisateurController extends AbstractController
             throw $this->createNotFoundException("Utilisateur non trouvé.");
         }
 
-        // Inverser le champ bloque (si "non" -> "oui", si "oui" -> "non")
+
         $utilisateur->setBloque($utilisateur->getBloque() === 'non' ? 'oui' : 'non');
 
         $em->persist($utilisateur);
@@ -411,6 +459,7 @@ public function mailing(Request $request, EntityManagerInterface $em, LoggerInte
             $id = $employe->getId();
             $email = $employe->getEmail();
             $nom = $employe->getNom();
+            $tel = '+216' . $employe->getTel();
             $pathToPdf = "$tempDir/paie/$nomEntreprise/$id/fiche_de_paie_modele.pdf";
             $securedPdf = "$tempDir/secured_$id.pdf";
             $pwd = substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 5);
@@ -422,7 +471,7 @@ public function mailing(Request $request, EntityManagerInterface $em, LoggerInte
                     continue;
                 }
 
-                // ✅ Protéger le vrai PDF avec mot de passe
+
                 $pdf = new TcpdfFpdi();
 
                 $pdf->SetPrintHeader(false);
@@ -446,9 +495,8 @@ public function mailing(Request $request, EntityManagerInterface $em, LoggerInte
                 }
 
                 // ✅ Envoi WhatsApp
-                $message = "Bonjour $nom, votre fiche de paie est disponible.\n🔐 Mot de passe : $pwd";
-                $url = "https://api.callmebot.com/whatsapp.php?phone=+21694653884&text=" . urlencode($message) . "&apikey=3830934";
-                file_get_contents($url);
+                $message = "Bonjour $nom, votre fiche de paie est disponible. Mot de passe : $pwd ";
+
 
                 // ✅ Envoi Email
                 $mail = new PHPMailer(true);
@@ -468,6 +516,17 @@ public function mailing(Request $request, EntityManagerInterface $em, LoggerInte
 
                 $mail->addAttachment($securedPdf);
                 $mail->send();
+
+
+                $gammu = '"C:\\Program Files (x86)\\Gammu 1.33.0\\bin\\gammu.exe"';
+                $config = '"C:\\Program Files (x86)\\Gammu 1.33.0\\bin\\gammurc"';
+
+                $commande = "$gammu -c $config sendsms TEXT $tel -text " . escapeshellarg($message);
+                exec($commande, $output, $codeRetour);
+                if ($codeRetour !== 0) {
+                    $logger->error("Échec de l'envoi SMS à $tel : code $codeRetour");
+                }
+
             } catch (\Throwable $e) {
                 $logger->error("Erreur génération ou envoi PDF pour employé $id : " . $e->getMessage());
                 $errors++;
@@ -615,11 +674,13 @@ public function mailing(Request $request, EntityManagerInterface $em, LoggerInte
             $nomEntrepriseXls = strtolower(trim($row[1] ?? ''));
             $nomXls = trim($row[2] ?? '');
             $emailXls = trim($row[3] ?? '');
+            $telXls = trim($row[4] ?? '');
 
+            $telValide = preg_match('/^[2459]\d{7}$/', $telXls);
             if (
                 $nomEntrepriseXls === strtolower(trim($entreprise->getNom())) &&
                 !empty($nomXls) &&
-                filter_var($emailXls, FILTER_VALIDATE_EMAIL)
+                filter_var($emailXls, FILTER_VALIDATE_EMAIL) && $telValide
             ) {
                 // Vérifie si l'ID est déjà utilisé (évite les doublons)
                 $existant = $em->getRepository(Employe::class)->find($idXls);
@@ -631,6 +692,7 @@ public function mailing(Request $request, EntityManagerInterface $em, LoggerInte
                 $employe->setId((int) $idXls); // Nécessite que l'ID ne soit pas auto-généré
                 $employe->setNom($nomXls);
                 $employe->setEmail($emailXls);
+                $employe->setTel($telXls);
                 $employe->setEntreprise($entreprise);
                 $em->persist($employe);
                 $nbAjoutes++;
@@ -648,4 +710,54 @@ public function mailing(Request $request, EntityManagerInterface $em, LoggerInte
     }
 
 
+
+    #[Route('/admin/backup-path', name: 'app_choisir_backup_path')]
+    public function choisirBackupPath(Request $request, EntityManagerInterface $em): Response
+    {
+        $backup = new Backup();
+        $dernierBackup = $em->getRepository(Backup::class)->findOneBy([], ['id' => 'DESC']);
+        $dernierChemin = $dernierBackup ? $dernierBackup->getPath() : 'Exemple : C:\Users\Pc\Desktop\KPMG\Export';
+
+        // 🔧 Créer le formulaire avec placeholder dynamique
+        $form = $this->createFormBuilder($backup)
+            ->add('path', TextType::class, [
+                'label' => 'Chemin du dossier de sauvegarde',
+                'attr' => [
+                    'placeholder' => $dernierChemin,
+                ],
+            ])
+            ->add('save', SubmitType::class, [
+                'label' => 'Enregistrer',
+            ])
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $backup->setDate(new \DateTime());
+            $em->persist($backup);
+            $em->flush();
+
+            $filesystem = new Filesystem();
+            $configFile = 'C:\Users\Pc\Desktop\KPMG\Export\config.txt';
+
+            try {
+                // Écrase le fichier avec le nouveau path
+                $filesystem->dumpFile($configFile, $backup->getPath());
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Erreur lors de l’écriture dans le fichier config.txt : ' . $e->getMessage());
+                return $this->render('admin/choisir_backup_path.html.twig', [
+                    'form' => $form->createView(),
+                ]);
+            }
+
+            $this->addFlash('success', 'Chemin enregistré avec succès.');
+
+            return $this->redirectToRoute('app_utilisateurs');
+        }
+
+        return $this->render('utilisateur/choisir_backup_path.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
 }

@@ -11,10 +11,13 @@ use Symfony\Component\PasswordHasher\Hasher\NativePasswordHasher;
 use App\Entity\Utilisateur;
 use App\Entity\Mdp;
 use App\Entity\Login;
+use App\Entity\Backup;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 
 final class LoginController extends AbstractController
 {
@@ -195,9 +198,20 @@ public function login(Request $request, EntityManagerInterface $em): Response
                         $em->persist($login);
                         $em->flush();
 
-                        return $this->redirectToRoute(
-                            $user->getRole() === 'ADMIN' ? 'app_utilisateurs' : 'app_mailing'
-                        );
+                        if ($user->getRole() === 'ADMIN') {
+                            $backup = $em->getRepository(Backup::class)->findOneBy([], ['id' => 'DESC']);
+                            if (!$backup || empty(trim($backup->getPath()))) {
+                                return $this->redirectToRoute('app_choisir_backup_path');
+                            }
+                            else{
+                            return $this->redirectToRoute('app_utilisateurs');
+                            }
+                        } else {
+                            return $this->redirectToRoute('app_mailing');
+                        }
+
+
+
                     }
                 } else {
                     $this->addFlash('error', 'Mot de passe incorrect.');

@@ -127,7 +127,7 @@
     <a href="{{ path('app_entreprises') }}" class="back-link">← Retour aux entreprises</a>
 
     <form action="{{ path('app_importer_employes', { entreprise_id: entreprise.id }) }}" method="post" enctype="multipart/form-data" class="import-form">
-      <label for="excel_file" style="margin: 0; font-weight: 600;">Importer un fichier Excel :</label>
+      <label for="excel_file" style="margin: 0; font-weight: 600;">Importer les employés par excel :</label>
       <input type="file" name="excel_file" id="excel_file" accept=".xlsx" required>
       <button type="submit" class="btn-import">📂 Importer</button>
     </form>
@@ -142,6 +142,7 @@
       <th>ID</th>
       <th>Nom</th>
       <th>Email</th>
+      <th>Télélephone</th>
       <th>Modifier</th>
       <th>Supprimer</th>
     </tr>
@@ -152,6 +153,7 @@
         <td>{{ employe.id }}</td>
         <td>{{ employe.nom }}</td>
         <td>{{ employe.email }}</td>
+        <td>{{ employe.tel }}</td>
         <td>
           <a href="{{ path('app_modifier_employe', { id: employe.id }) }}" class="btn-yellow">✏️ Modifier</a>
         </td>

@@ -37,6 +37,17 @@
   <label for="email">📧 Email :</label>
   <input type="email" name="email" id="email" required>
 
+  <label for="tel">📞 Téléphone :</label>
+  <input 
+    type="text" 
+    name="tel" 
+    id="tel" 
+    required 
+    pattern="^(2|4|5|7|9)[0-9]{7}$" 
+    placeholder="Ex: 12345678" 
+    maxlength="8"
+    title="Numéro tunisien de 8 chiffres">
+
   <button type="submit" class="btn green">✅ Ajouter</button>
 </form>
 
