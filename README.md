@@ -22,8 +22,8 @@ Deux types d’utilisateurs peuvent accéder au système :
 |            |- Gérer les employés  
 |           |  - Envoyer des fiches de paie sécurisées (PDF protégé par mot de passe, envoyé par SMS) |
 | **Admin** | - Gérer les utilisateurs RH  
-             - Envoyer des fiches de paie sécurisées (PDF protégé par mot de passe, envoyé par SMS) |
-             - Surveiller la conformité du système |
+|           |- Envoyer des fiches de paie sécurisées (PDF protégé par mot de passe, envoyé par SMS) |
+|           | - Surveiller la conformité du système |
 
 ---
 
