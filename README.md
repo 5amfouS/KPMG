@@ -73,21 +73,33 @@ symfony console doctrine:migrations:migrate
 ```
 
 
-2️⃣ Configurer le modem SMS avec Gammu
-Brancher votre modem 4G (clé USB) et identifier le port COM utilisé (ex: COM4) via le gestionnaire de périphériques.
-
-Créer un fichier gammurc (sans extension) dans le même dossier que gammu.exe, avec le contenu suivant :
+### 2️⃣ Configurer le modem SMS avec Gammu
+  1. Brancher votre modem 4G (clé USB) et identifier le port COM utilisé (ex: COM4) via le gestionnaire de périphériques.
+  2. Créer un fichier gammurc (sans extension) dans le même dossier que gammu.exe, avec le contenu suivant :
+```
 [gammu]
 port = COM4
 connection = at19200
+```
 
-3️⃣ Automatiser la sauvegarde de la base de données
-Créer un fichier script.bat avec le contenu suivant :
-
-bat
-Copier
-Modifier
-
+### 3️⃣ Automatiser la sauvegarde de la base de données
+  1. Créer un fichier script.bat avec le contenu suivant :
+```
+  @echo off
+  setlocal
+  
+  :: Lire le chemin depuis config.txt
+  set /p BACKUP_PATH=<"C:\Users\Pc\Desktop\KPMG\Export\config.txt"
+  
+  :: Créer un horodatage
+  set TIMESTAMP=%DATE:~-4%%DATE:~3,2%%DATE:~0,2%_%TIME:~0,2%%TIME:~3,2%
+  set TIMESTAMP=%TIMESTAMP: =0%
+  
+  :: Exporter la base
+  "C:\xampp\mysql\bin\mysqldump.exe" -u root KPMG > "%BACKUP_PATH%\backup_%TIMESTAMP%.sql"
+  
+  endlocal
+```
 ## Comment utiliser la plateforme?
 
 1-Télécharger l'intégralité du projet
